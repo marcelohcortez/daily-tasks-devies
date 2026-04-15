@@ -1,0 +1,138 @@
+.container {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  min-height: 60px;
+}
+
+.empty {
+  padding: 1.5rem;
+  color: #9ca3af;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+  flex-wrap: wrap;
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.desc {
+  flex: 1;
+  font-size: 0.95rem;
+}
+
+.dur {
+  font-size: 0.85rem;
+  color: #6b7280;
+  min-width: 70px;
+  text-align: right;
+}
+
+.iconBtn {
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  padding: 0.25rem;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.iconBtn:hover {
+  background: #f3f4f6;
+}
+
+.editInput {
+  flex: 1;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.95rem;
+}
+
+.editDurWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.editDurLabel {
+  font-size: 0.875rem;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.editDurInput {
+  width: 80px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.95rem;
+}
+
+.updateBtn {
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.cancelBtn {
+  background: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.deleteWarning {
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.deleteInput {
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.95rem;
+  width: 120px;
+}
+
+.confirmDeleteBtn {
+  background: #dc2626;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.confirmDeleteBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.rowError {
+  width: 100%;
+  color: #dc2626;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.addFormWrapper {
+  padding: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+}

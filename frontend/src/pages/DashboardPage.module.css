@@ -1,0 +1,101 @@
+.page {
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.username {
+  font-weight: 600;
+}
+
+.logoutBtn {
+  background: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  transition: background 0.15s;
+}
+
+.logoutBtn:hover {
+  background: #f3f4f6;
+}
+
+.main {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.dateNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.dateCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.dateLabel {
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.calendarBtn {
+  font-size: 0.8rem;
+  background: transparent;
+  border: none;
+  color: #6366f1;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.arrowBtn {
+  font-size: 2rem;
+  line-height: 1;
+  background: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.25rem 0.75rem;
+  color: #374151;
+  transition: background 0.15s;
+}
+
+.arrowBtn:hover {
+  background: #f3f4f6;
+}
+
+.loading {
+  color: #6b7280;
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.summary {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #374151;
+  text-align: center;
+}
