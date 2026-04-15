@@ -48,10 +48,16 @@ const authLimiter = rateLimit({
 app.use(globalLimiter)
 app.use('/api/auth/login', authLimiter)
 app.use('/api/auth/register', authLimiter)
+app.use('/auth/login', authLimiter)
+app.use('/auth/register', authLimiter)
 
 // ── Routes ────────────────────────────────────────────────────────────────────
+// Mount on both prefixes: /api/* for local dev (Vite proxy keeps /api),
+// /* for production (Vercel strips the /api routePrefix before forwarding)
 app.use('/api/auth', authRoutes)
 app.use('/api/tasks', tasksRoutes)
+app.use('/auth', authRoutes)
+app.use('/tasks', tasksRoutes)
 
 // ── Error handler ─────────────────────────────────────────────────────────────
 app.use(errorHandler)
