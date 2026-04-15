@@ -61,6 +61,9 @@ JWT_EXPIRES_IN=
 # App
 PORT=
 NODE_ENV=
+
+# Frontend (for CORS)
+FRONTEND_URL=
 ```
 
 > **Security:** `.env.local` and `.env.prod` must be added to `.gitignore`. Credentials must never be hardcoded in source files.
@@ -85,7 +88,7 @@ NODE_ENV=
 | id           | TEXT    | PRIMARY KEY (UUID)                 |
 | user_id      | TEXT    | FOREIGN KEY → users.id, NOT NULL   |
 | description  | TEXT    | NOT NULL                           |
-| duration     | TEXT    | NOT NULL (e.g. "1h 30min")         |
+| duration     | TEXT    | NOT NULL (e.g. "1h", "2h")         |
 | duration_min | INTEGER | NOT NULL (total minutes, computed) |
 | task_date    | TEXT    | NOT NULL (ISO 8601 date YYYY-MM-DD)|
 | created_at   | TEXT    | NOT NULL (ISO 8601)                |
@@ -130,10 +133,12 @@ All task endpoints enforce ownership — users can only read/modify their own ta
 ```json
 {
   "description": "Reviewed pull requests",
-  "duration": "1h 30min",
+  "duration": "2",
   "task_date": "2026-04-14"
 }
 ```
+
+> `duration` is a positive whole-number integer string representing hours (e.g. `"1"`, `"2"`, `"3"`).
 
 ---
 
@@ -184,7 +189,7 @@ All task endpoints enforce ownership — users can only read/modify their own ta
 #### Task Input (current and future dates)
 
 - Input field: task description
-- Input field: time spent (supports formats like `30min`, `1h`, `1h 30min`, `2h`)
+- Input field: time spent — a numeric input accepting only a positive whole number of hours (e.g. `1`, `2`, `3`)
 - Button: "Add another task" — appends an additional pair of description + duration inputs
 - "Save" / submit action persists the new task(s)
 
@@ -230,7 +235,7 @@ This project follows a **test-driven development approach**. Playwright E2E test
 
 ## 12. Deployment (Vercel)
 
-- Frontend deployed as a Vercel static/SSR project
-- Backend deployed as Vercel serverless functions
+- Frontend deployed as a Vercel Web Service (Vite)
+- Backend deployed as a Vercel Web Service (Express)
 - Production environment variables set via Vercel dashboard (not committed to repository)
 - `.env.prod` used only for local production simulation
