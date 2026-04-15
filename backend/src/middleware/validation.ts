@@ -29,6 +29,6 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
     res.status(err.status).json({ message: err.message })
     return
   }
-  console.error(err)
+  console.error('[errorHandler]', err?.constructor?.name, err?.message, err?.stack)
   res.status(500).json({ message: 'Internal server error' })
 }

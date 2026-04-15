@@ -51,6 +51,10 @@ app.use('/api/auth/register', authLimiter)
 app.use('/auth/login', authLimiter)
 app.use('/auth/register', authLimiter)
 
+// ── Health check ──────────────────────────────────────────────────────────────
+app.get('/api/health', (_req, res) => { res.json({ ok: true }) })
+app.get('/health', (_req, res) => { res.json({ ok: true }) })
+
 // ── Routes ────────────────────────────────────────────────────────────────────
 // Mount on both prefixes: /api/* for local dev (Vite proxy keeps /api),
 // /* for production (Vercel strips the /api routePrefix before forwarding)
