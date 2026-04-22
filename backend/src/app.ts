@@ -4,6 +4,7 @@ import helmet from 'helmet'
 import { rateLimit } from 'express-rate-limit'
 import authRoutes from './routes/auth'
 import tasksRoutes from './routes/tasks'
+import cronRoutes from './routes/cron'
 import { errorHandler } from './middleware/validation'
 
 const app = express()
@@ -60,8 +61,10 @@ app.get('/health', (_req, res) => { res.json({ ok: true }) })
 // /* for production (Vercel strips the /api routePrefix before forwarding)
 app.use('/api/auth', authRoutes)
 app.use('/api/tasks', tasksRoutes)
+app.use('/api/cron', cronRoutes)
 app.use('/auth', authRoutes)
 app.use('/tasks', tasksRoutes)
+app.use('/cron', cronRoutes)
 
 // ── Error handler ─────────────────────────────────────────────────────────────
 app.use(errorHandler)

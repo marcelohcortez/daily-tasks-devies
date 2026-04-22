@@ -1,6 +1,7 @@
 export interface User {
   id: string
   username: string
+  email: string | null
 }
 
 export interface Task {
@@ -10,6 +11,7 @@ export interface Task {
   duration: string
   duration_min: number
   task_date: string
+  reminder_enabled: number
   created_at: string
   updated_at: string
 }
@@ -39,19 +41,24 @@ export const api = {
       }),
     logout: () => apiFetch<void>('/auth/logout', { method: 'POST' }),
     me: () => apiFetch<{ user: User }>('/auth/me'),
-    register: (username: string, password: string) =>
+    register: (username: string, password: string, email?: string) =>
       apiFetch<{ user: User }>('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, ...(email ? { email } : {}) }),
+      }),
+    updateProfile: (email: string | null) =>
+      apiFetch<{ user: { email: string | null } }>('/auth/profile', {
+        method: 'PATCH',
+        body: JSON.stringify({ email }),
       }),
   },
   tasks: {
     list: (date: string) => apiFetch<{ tasks: Task[] }>(`/tasks?date=${date}`),
-    create: (data: { description: string; duration: string; task_date: string }) =>
+    create: (data: { description: string; duration: string; task_date: string; reminder_enabled?: boolean }) =>
       apiFetch<{ task: Task }>('/tasks', { method: 'POST', body: JSON.stringify(data) }),
     update: (
       id: string,
-      data: { description: string; duration: string; task_date: string }
+      data: { description: string; duration: string; task_date: string; reminder_enabled?: boolean }
     ) => apiFetch<{ task: Task }>(`/tasks/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
     delete: (id: string) => apiFetch<void>(`/tasks/${id}`, { method: 'DELETE' }),
   },

@@ -18,7 +18,7 @@ export async function getTasks(req: AuthRequest, res: Response): Promise<void> {
   const date = validateDate(req.query.date)
 
   const result = await db.execute({
-    sql: 'SELECT id, description, duration, duration_min, task_date, created_at, updated_at FROM tasks WHERE user_id = ? AND task_date = ? ORDER BY created_at ASC',
+    sql: 'SELECT id, description, duration, duration_min, task_date, reminder_enabled, created_at, updated_at FROM tasks WHERE user_id = ? AND task_date = ? ORDER BY created_at ASC',
     args: [userId, date],
   })
 
@@ -30,6 +30,7 @@ export async function createTask(req: AuthRequest, res: Response): Promise<void>
   const description = sanitizeString(req.body?.description, 'description')
   const rawDuration = sanitizeString(req.body?.duration, 'duration')
   const taskDate = validateDate(req.body?.task_date)
+  const reminderEnabled = req.body?.reminder_enabled === true ? 1 : 0
 
   const { stored, minutes } = parseDuration(rawDuration)
 
@@ -37,12 +38,12 @@ export async function createTask(req: AuthRequest, res: Response): Promise<void>
   const now = new Date().toISOString()
 
   await db.execute({
-    sql: 'INSERT INTO tasks (id, user_id, description, duration, duration_min, task_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    args: [id, userId, description, stored, minutes, taskDate, now, now],
+    sql: 'INSERT INTO tasks (id, user_id, description, duration, duration_min, task_date, reminder_enabled, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    args: [id, userId, description, stored, minutes, taskDate, reminderEnabled, now, now],
   })
 
   res.status(201).json({
-    task: { id, user_id: userId, description, duration: stored, duration_min: minutes, task_date: taskDate, created_at: now, updated_at: now },
+    task: { id, user_id: userId, description, duration: stored, duration_min: minutes, task_date: taskDate, reminder_enabled: reminderEnabled, created_at: now, updated_at: now },
   })
 }
 
@@ -50,7 +51,6 @@ export async function updateTask(req: AuthRequest, res: Response): Promise<void>
   const userId = req.user!.userId
   const taskId = String(req.params.id)
 
-  // Verify ownership
   const existing = await db.execute({
     sql: 'SELECT id FROM tasks WHERE id = ? AND user_id = ?',
     args: [taskId, userId],
@@ -64,17 +64,18 @@ export async function updateTask(req: AuthRequest, res: Response): Promise<void>
   const description = sanitizeString(req.body?.description, 'description')
   const rawDuration = sanitizeString(req.body?.duration, 'duration')
   const taskDate = validateDate(req.body?.task_date)
+  const reminderEnabled = req.body?.reminder_enabled === true ? 1 : 0
 
   const { stored, minutes } = parseDuration(rawDuration)
   const now = new Date().toISOString()
 
   await db.execute({
-    sql: 'UPDATE tasks SET description = ?, duration = ?, duration_min = ?, task_date = ?, updated_at = ? WHERE id = ? AND user_id = ?',
-    args: [description, stored, minutes, taskDate, now, taskId, userId],
+    sql: 'UPDATE tasks SET description = ?, duration = ?, duration_min = ?, task_date = ?, reminder_enabled = ?, updated_at = ? WHERE id = ? AND user_id = ?',
+    args: [description, stored, minutes, taskDate, reminderEnabled, now, taskId, userId],
   })
 
   res.json({
-    task: { id: taskId, user_id: userId, description, duration: stored, duration_min: minutes, task_date: taskDate, updated_at: now },
+    task: { id: taskId, user_id: userId, description, duration: stored, duration_min: minutes, task_date: taskDate, reminder_enabled: reminderEnabled, updated_at: now },
   })
 }
 
@@ -99,3 +100,4 @@ export async function deleteTask(req: AuthRequest, res: Response): Promise<void>
 
   res.status(204).send()
 }
+

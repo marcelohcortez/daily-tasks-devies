@@ -56,6 +56,25 @@
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
+.reminderLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.reminderHint {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.reminderHint a {
+  color: #6366f1;
+}
+
 .actions {
   display: flex;
   justify-content: space-between;

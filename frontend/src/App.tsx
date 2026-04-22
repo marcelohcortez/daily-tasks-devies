@@ -3,6 +3,7 @@ import { AuthProvider } from './hooks/useAuth'
 import { RequireAuth, RequireGuest } from './guards'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
+import ProfilePage from './pages/ProfilePage'
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
           </Route>
           <Route element={<RequireAuth />}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Route>
           {/* Catch-all */}
           <Route path="*" element={<LoginPage />} />

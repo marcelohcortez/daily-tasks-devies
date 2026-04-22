@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { api, Task } from '../utils/api'
 import { todayISO, offsetDate, formatDateLabel, formatMinutes } from '../utils/date'
@@ -48,15 +48,18 @@ export default function DashboardPage() {
     navigate('/', { replace: true })
   }
 
-  const totalMinutes = tasks.reduce((sum, t) => sum + t.duration_min, 0)
+  const totalMinutes = tasks.reduce((sum, t) => sum + (t.duration_min ?? 0), 0)
 
   return (
     <div className={styles.page}>
       <header className={styles.header}>
         <span className={styles.username}>{user?.username}</span>
-        <button onClick={handleLogout} className={styles.logoutBtn}>
-          Log Out
-        </button>
+        <div className={styles.headerActions}>
+          <Link to="/profile" className={styles.profileLink}>Profile</Link>
+          <button onClick={handleLogout} className={styles.logoutBtn}>
+            Log Out
+          </button>
+        </div>
       </header>
 
       <main className={styles.main}>

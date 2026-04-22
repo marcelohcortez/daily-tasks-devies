@@ -1,10 +1,13 @@
 import { useState, FormEvent } from 'react'
 import { api } from '../utils/api'
+import { useAuth } from '../hooks/useAuth'
+import { todayISO } from '../utils/date'
 import styles from './TaskForm.module.css'
 
 interface TaskRow {
   description: string
   duration: string
+  reminder: boolean
 }
 
 interface Props {
@@ -13,16 +16,20 @@ interface Props {
 }
 
 export default function TaskForm({ taskDate, onSaved }: Props) {
-  const [rows, setRows] = useState<TaskRow[]>([{ description: '', duration: '' }])
+  const { user } = useAuth()
+  const isFuture = taskDate > todayISO()
+  const canRemind = isFuture && !!user?.email
+
+  const [rows, setRows] = useState<TaskRow[]>([{ description: '', duration: '', reminder: false }])
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
-  function updateRow(index: number, field: keyof TaskRow, value: string) {
+  function updateRow(index: number, field: keyof TaskRow, value: string | boolean) {
     setRows((prev) => prev.map((r, i) => (i === index ? { ...r, [field]: value } : r)))
   }
 
   function addRow() {
-    setRows((prev) => [...prev, { description: '', duration: '' }])
+    setRows((prev) => [...prev, { description: '', duration: '', reminder: false }])
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -32,16 +39,17 @@ export default function TaskForm({ taskDate, onSaved }: Props) {
     try {
       await Promise.all(
         rows
-          .filter((r) => r.description.trim() && r.duration.trim())
+          .filter((r) => r.description.trim())
           .map((r) =>
             api.tasks.create({
               description: r.description.trim(),
               duration: r.duration.trim(),
               task_date: taskDate,
+              reminder_enabled: canRemind && r.reminder,
             })
           )
       )
-      setRows([{ description: '', duration: '' }])
+      setRows([{ description: '', duration: '', reminder: false }])
       onSaved()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save tasks')
@@ -75,12 +83,27 @@ export default function TaskForm({ taskDate, onSaved }: Props) {
               placeholder="hours"
               value={row.duration}
               onChange={(e) => updateRow(i, 'duration', e.target.value)}
-              required
               disabled={saving}
               className={styles.durInput}
             />
             <span className={styles.durLabel}>hrs</span>
           </div>
+          {canRemind && (
+            <label className={styles.reminderLabel}>
+              <input
+                type="checkbox"
+                checked={row.reminder}
+                onChange={(e) => updateRow(i, 'reminder', e.target.checked)}
+                disabled={saving}
+              />
+              Remind me
+            </label>
+          )}
+          {isFuture && !user?.email && (
+            <span className={styles.reminderHint}>
+              <a href="/profile">Add email</a> to enable reminders
+            </span>
+          )}
         </div>
       ))}
 

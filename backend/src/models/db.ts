@@ -15,6 +15,7 @@ export async function initDb(): Promise<void> {
       id TEXT PRIMARY KEY,
       username TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
+      email TEXT,
       created_at TEXT NOT NULL
     );
 
@@ -25,9 +26,18 @@ export async function initDb(): Promise<void> {
       duration TEXT NOT NULL,
       duration_min INTEGER NOT NULL,
       task_date TEXT NOT NULL,
+      reminder_enabled INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
   `)
+
+  // Migrate existing tables: add columns if they don't exist yet
+  await db.executeMultiple(`
+    ALTER TABLE users ADD COLUMN email TEXT;
+    ALTER TABLE tasks ADD COLUMN reminder_enabled INTEGER NOT NULL DEFAULT 0;
+  `).catch(() => {
+    // Columns likely already exist — ignore
+  })
 }

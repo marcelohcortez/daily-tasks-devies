@@ -14,6 +14,9 @@ A web application that allows authenticated users to log, manage, and review the
 | Backend     | Node.js + TypeScript          |
 | Database    | Turso (LibSQL)                |
 | Auth        | JWT (JSON Web Tokens)         |
+| Email       | Resend                        |
+| PDF         | PDFKit                        |
+| Scheduling  | Vercel Cron Jobs              |
 | Linting     | ESLint                        |
 | Testing     | Playwright (E2E)              |
 | Deployment  | Vercel                        |
@@ -64,6 +67,13 @@ NODE_ENV=
 
 # Frontend (for CORS)
 FRONTEND_URL=
+
+# Email (Resend)
+RESEND_API_KEY=
+EMAIL_FROM=
+
+# Cron security
+CRON_SECRET=
 ```
 
 > **Security:** `.env.local` and `.env.prod` must be added to `.gitignore`. Credentials must never be hardcoded in source files.
@@ -74,25 +84,27 @@ FRONTEND_URL=
 
 ### `users`
 
-| Column       | Type    | Constraints             |
-|--------------|---------|-------------------------|
-| id           | TEXT    | PRIMARY KEY (UUID)      |
-| username     | TEXT    | UNIQUE, NOT NULL        |
-| password     | TEXT    | NOT NULL (bcrypt hash)  |
-| created_at   | TEXT    | NOT NULL (ISO 8601)     |
+| Column       | Type    | Constraints                     |
+|--------------|---------|---------------------------------|
+| id           | TEXT    | PRIMARY KEY (UUID)              |
+| username     | TEXT    | UNIQUE, NOT NULL                |
+| password     | TEXT    | NOT NULL (bcrypt hash)          |
+| email        | TEXT    | NULLABLE (for reminders)        |
+| created_at   | TEXT    | NOT NULL (ISO 8601)             |
 
 ### `tasks`
 
-| Column       | Type    | Constraints                        |
-|--------------|---------|------------------------------------|
-| id           | TEXT    | PRIMARY KEY (UUID)                 |
-| user_id      | TEXT    | FOREIGN KEY → users.id, NOT NULL   |
-| description  | TEXT    | NOT NULL                           |
-| duration     | TEXT    | NOT NULL (e.g. "1h", "2h")         |
-| duration_min | INTEGER | NOT NULL (total minutes, computed) |
-| task_date    | TEXT    | NOT NULL (ISO 8601 date YYYY-MM-DD)|
-| created_at   | TEXT    | NOT NULL (ISO 8601)                |
-| updated_at   | TEXT    | NOT NULL (ISO 8601)                |
+| Column           | Type    | Constraints                          |
+|------------------|---------|--------------------------------------|
+| id               | TEXT    | PRIMARY KEY (UUID)                   |
+| user_id          | TEXT    | FOREIGN KEY → users.id, NOT NULL     |
+| description      | TEXT    | NOT NULL                             |
+| duration         | TEXT    | NULLABLE (e.g. "1h", "2h")           |
+| duration_min     | INTEGER | NULLABLE (total minutes, computed)   |
+| task_date        | TEXT    | NOT NULL (ISO 8601 date YYYY-MM-DD)  |
+| reminder_enabled | INTEGER | NOT NULL DEFAULT 0 (0=off, 1=on)     |
+| created_at       | TEXT    | NOT NULL (ISO 8601)                  |
+| updated_at       | TEXT    | NOT NULL (ISO 8601)                  |
 
 ---
 
@@ -134,11 +146,45 @@ All task endpoints enforce ownership — users can only read/modify their own ta
 {
   "description": "Reviewed pull requests",
   "duration": "2",
-  "task_date": "2026-04-14"
+  "task_date": "2026-04-25",
+  "reminder_enabled": true
 }
 ```
 
-> `duration` is a positive whole-number integer string representing hours (e.g. `"1"`, `"2"`, `"3"`).
+> `duration` is optional. If provided, it must be a positive whole-number integer string (e.g. `"1"`, `"2"`). If omitted, `duration` and `duration_min` are stored as `NULL`.
+> `reminder_enabled` is optional (default `false`). Only meaningful for future dates; ignored for past/current dates.
+
+### Export
+
+| Method | Path | Description | Auth required |
+|--------|------|-------------|---------------|
+| GET | `/tasks/export/pdf?period=week&date=YYYY-MM-DD` | Export tasks as PDF for one week | Yes |
+| GET | `/tasks/export/pdf?period=month&date=YYYY-MM-DD` | Export tasks as PDF for one month | Yes |
+
+- `period`: `week` (Mon–Sun of the week containing `date`) or `month` (full calendar month containing `date`)
+- `date`: any date within the desired week or month
+- Response: `application/pdf` binary stream with filename `tasks-[period]-[date].pdf`
+
+### Reminders (internal cron)
+
+| Method | Path | Description | Auth required |
+|--------|------|-------------|---------------|
+| POST | `/cron/reminders` | Send reminder emails for today's tasks | Cron secret header |
+
+- Called by Vercel Cron at **07:00 CET** (= `0 6 * * *` UTC) daily
+- Secured via `Authorization: Bearer <CRON_SECRET>` header
+- Queries all tasks where `task_date = today` AND `reminder_enabled = 1`
+- Groups by user; skips users with no email set
+- Sends one summary email per user listing that day's reminder tasks
+
+### Auth (additions)
+
+`POST /auth/register` accepts an optional `email` field.
+`PATCH /auth/profile` allows an authenticated user to set or update their email.
+
+| Method | Path | Description | Auth required |
+|--------|------|-------------|---------------|
+| PATCH | `/auth/profile` | Update user email | Yes |
 
 ---
 
@@ -189,8 +235,9 @@ All task endpoints enforce ownership — users can only read/modify their own ta
 #### Task Input (current and future dates)
 
 - Input field: task description
-- Input field: time spent — a numeric input accepting only a positive whole number of hours (e.g. `1`, `2`, `3`)
-- Button: "Add another task" — appends an additional pair of description + duration inputs
+- Input field: time spent — a numeric input accepting only a positive whole number of hours (e.g. `1`, `2`, `3`). **Optional** — task can be saved without a duration.
+- For **future dates only**: checkbox "Set reminder" — visible only if the user has an email set; if checked, an email reminder is sent at 07:00 CET on the task day.
+- Button: "Add another task" — appends an additional set of inputs
 - "Save" / submit action persists the new task(s)
 
 #### Time Summary
@@ -202,15 +249,16 @@ All task endpoints enforce ownership — users can only read/modify their own ta
 
 ## 10. Time Format
 
-Duration is entered as a **positive whole number of hours** via a numeric input field. Fractional hours are not supported.
+Duration is **optional**. When provided, it must be a positive whole number of hours via a numeric input field. Fractional hours are not supported.
 
-| Input (user types) | Stored as | Minutes |
+| Input (user types) | Stored as | Minutes  |
 |--------------------|-----------|----------|
+| *(empty)*          | `NULL`    | `NULL`   |
 | `1`                | `1h`      | 60       |
 | `2`                | `2h`      | 120      |
 | `3`                | `3h`      | 180      |
 
-The time summary displays the total as `Xh` (e.g. `3h`, `10h`).
+The time summary sums only tasks that have a duration. Tasks without a duration contribute `0` to the total.
 
 ---
 
@@ -233,9 +281,31 @@ This project follows a **test-driven development approach**. Playwright E2E test
 
 ---
 
-## 12. Deployment (Vercel)
+## 12. Email Reminders
+
+- Users can optionally provide an email at registration or update it later via `PATCH /auth/profile`.
+- When creating or editing a task on a **future date**, a "Set reminder" checkbox appears (only if the user has an email set).
+- If enabled, the Vercel Cron Job fires at `07:00 CET` on the task's date, queries all tasks with `reminder_enabled = 1` and `task_date = today`, groups by user, and sends one summary email per user via **Resend**.
+- Email subject: `"Your tasks for [formatted date]"`; body lists each reminder task (description + duration or "no duration set").
+- The cron endpoint is protected by a `CRON_SECRET` bearer token.
+
+---
+
+## 13. PDF Export
+
+- Available from the Dashboard via an "Export" button (top-right of the dashboard).
+- User selects period: **This week** (Mon–Sun of the current viewed week) or **This month**.
+- The frontend calls `GET /api/tasks/export/pdf?period=week|month&date=YYYY-MM-DD`.
+- The backend fetches all tasks for the authenticated user in the resolved date range, generates a PDF with **PDFKit**, and streams it as `application/pdf`.
+- PDF layout: title with username and date range; one row per day with its date label; task rows showing description and duration (or "—" if none); daily time subtotal; grand total at the end.
+- The browser downloads the file as `tasks-[period]-[date].pdf`.
+
+---
+
+## 14. Deployment (Vercel)
 
 - Frontend deployed as a Vercel Web Service (Vite)
 - Backend deployed as a Vercel Web Service (Express)
 - Production environment variables set via Vercel dashboard (not committed to repository)
 - `.env.prod` used only for local production simulation
+- Vercel Cron Job configured in `vercel.json`: `{"path": "/cron/reminders", "schedule": "0 6 * * *"}` (06:00 UTC = 07:00 CET)
