@@ -1,8 +1,20 @@
 import { Request, Response } from 'express'
-import { Resend } from 'resend'
 import { db } from '../models/db'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+async function sendEmail(to: string, from: string, subject: string, text: string): Promise<void> {
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ from, to, subject, text }),
+  })
+  if (!res.ok) {
+    const body = await res.text()
+    throw new Error(`Resend API error ${res.status}: ${body}`)
+  }
+}
 
 function todayCET(): string {
   // Get current date in CET/CEST (Europe/Paris = UTC+1 or UTC+2)
@@ -65,12 +77,12 @@ export async function sendReminders(req: Request, res: Response): Promise<void> 
       .map((t) => `• ${t.description}${t.duration ? ` (${t.duration})` : ''}`)
       .join('\n')
 
-    await resend.emails.send({
-      from: fromAddress,
-      to: email,
-      subject: `Your tasks for ${dateLabel}`,
-      text: `Hi ${username},\n\nHere are your tasks for today (${dateLabel}):\n\n${taskLines}\n\nGood luck!\n— Daily Tasks`,
-    })
+    await sendEmail(
+      email,
+      fromAddress,
+      `Your tasks for ${dateLabel}`,
+      `Hi ${username},\n\nHere are your tasks for today (${dateLabel}):\n\n${taskLines}\n\nGood luck!\n— Daily Tasks`,
+    )
     sent++
   }
 
