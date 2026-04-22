@@ -61,5 +61,18 @@ export const api = {
       data: { description: string; duration: string; task_date: string; reminder_enabled?: boolean }
     ) => apiFetch<{ task: Task }>(`/tasks/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
     delete: (id: string) => apiFetch<void>(`/tasks/${id}`, { method: 'DELETE' }),
+    exportPdf: async (period: 'week' | 'month', date: string): Promise<void> => {
+      const res = await fetch(`/api/tasks/export/pdf?period=${period}&date=${date}`, {
+        credentials: 'include',
+      })
+      if (!res.ok) throw new Error('Export failed')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `tasks-${period}-${date}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+    },
   },
 }

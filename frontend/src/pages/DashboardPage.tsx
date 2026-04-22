@@ -21,6 +21,18 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(false)
   const [calendarOpen, setCalendarOpen] = useState(false)
+  const [exporting, setExporting] = useState(false)
+
+  async function handleExport(period: 'week' | 'month') {
+    setExporting(true)
+    try {
+      await api.tasks.exportPdf(period, dateParam)
+    } catch {
+      // silently ignore — browser will show no download
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const goToDate = useCallback(
     (d: string) => setSearchParams({ date: d }),
@@ -56,6 +68,15 @@ export default function DashboardPage() {
         <span className={styles.username}>{user?.username}</span>
         <div className={styles.headerActions}>
           <Link to="/profile" className={styles.profileLink}>Profile</Link>
+          <div className={styles.exportMenu}>
+            <button className={styles.exportBtn} disabled={exporting}>
+              {exporting ? 'Exporting…' : 'Export PDF ▾'}
+            </button>
+            <div className={styles.exportDropdown}>
+              <button onClick={() => handleExport('week')}>This week</button>
+              <button onClick={() => handleExport('month')}>This month</button>
+            </div>
+          </div>
           <button onClick={handleLogout} className={styles.logoutBtn}>
             Log Out
           </button>

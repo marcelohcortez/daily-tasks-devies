@@ -45,6 +45,60 @@
   text-decoration: underline;
 }
 
+.exportMenu {
+  position: relative;
+}
+
+.exportMenu:hover .exportDropdown {
+  display: flex;
+}
+
+.exportBtn {
+  background: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  transition: background 0.15s;
+  cursor: pointer;
+}
+
+.exportBtn:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.exportBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.exportDropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  flex-direction: column;
+  min-width: 130px;
+  z-index: 10;
+}
+
+.exportDropdown button {
+  background: transparent;
+  border: none;
+  padding: 0.5rem 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.exportDropdown button:hover {
+  background: #f9fafb;
+}
+
 .main {
   max-width: 700px;
   margin: 0 auto;

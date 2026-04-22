@@ -127,9 +127,9 @@ Set up Playwright and write all E2E tests based on the spec. Tests will initiall
 
 ## P8 — PDF Export
 
-- [ ] Install `pdfkit` and `@types/pdfkit` in backend
-- [ ] Implement `GET /api/tasks/export/pdf` endpoint: resolve date range from `period` + `date` params, fetch tasks, stream PDF response
-- [ ] PDF layout: title (username + date range), day sections, task rows, daily subtotals, grand total
-- [ ] Also mount at `GET /tasks/export/pdf` for production routing (Vercel prefix stripping)
-- [ ] Add "Export" button to Dashboard UI with period selector (This week / This month)
-- [ ] Wire export button to trigger file download from `/api/tasks/export/pdf`
+- [x] Install `pdfkit` and `@types/pdfkit` in backend
+- [x] Implement `GET /api/tasks/export/pdf` endpoint: resolve date range from `period` + `date` params, fetch tasks, stream PDF response
+- [x] PDF layout: title (username + date range), day sections, task rows (description + duration or "—"), daily subtotals, grand total
+- [x] Also mounted at `GET /tasks/export/pdf` (shared tasks router handles both prefixes)
+- [x] Add "Export PDF ▾" dropdown button to Dashboard header with "This week" / "This month" options
+- [x] Wire export button to trigger file download from `/api/tasks/export/pdf`
