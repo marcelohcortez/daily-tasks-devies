@@ -153,7 +153,7 @@ function TaskRow({
   return (
     <div className={styles.row}>
       <span className={styles.desc}>{task.description}</span>
-      <span className={styles.dur}>{task.duration}</span>
+      <span className={styles.dur}>{task.duration || null}</span>
       <button
         aria-label="Edit task"
         onClick={() => setEditing(true)}
