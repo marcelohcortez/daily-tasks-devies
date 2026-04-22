@@ -98,31 +98,29 @@ Set up Playwright and write all E2E tests based on the spec. Tests will initiall
 
 ## P6 — Optional Duration
 
-- [ ] Update `tasks` DB table: make `duration` and `duration_min` columns NULLABLE (migration via `ALTER TABLE` or recreate)
-- [ ] Update `parseDuration` utility: return `null` when input is empty
-- [ ] Update `POST /api/tasks` and `PATCH /api/tasks/:id`: skip duration parsing when field is absent/empty
-- [ ] Update frontend `TaskForm`: remove `required` from duration input
-- [ ] Update frontend `TaskList` inline edit: allow saving with empty duration
-- [ ] Update time summary: skip `NULL` duration_min values when summing
-- [ ] Display `"—"` in task rows where duration is not set
+- [x] Update `tasks` DB table: `duration` and `duration_min` columns are NULLABLE in fresh schema; existing production table retains NOT NULL — resolved by storing `''`/`0` for no-duration tasks
+- [x] Update `parseDuration` utility: return `''` / `0` when input is empty (satisfies NOT NULL constraint)
+- [x] Update `POST /api/tasks` and `PATCH /api/tasks/:id`: pass empty string to `parseDuration` when `duration` field is absent/empty
+- [x] Update frontend `TaskForm`: remove `required` from duration input; update placeholder to `"hours (optional)"`
+- [x] Update frontend `TaskList`: hide duration span when `task.duration` is empty
+- [x] Update time summary: `duration_min ?? 0` ensures NULL/0 rows contribute nothing to the total
 
 ---
 
 ## P7 — Email Reminders
 
-- [ ] Add `email` column (NULLABLE TEXT) to `users` table
-- [ ] Add `reminder_enabled` column (INTEGER NOT NULL DEFAULT 0) to `tasks` table
-- [ ] Update `POST /auth/register` to accept and store optional `email` field
-- [ ] Add `PATCH /auth/profile` endpoint to set/update user email (auth required)
-- [ ] Update `POST /api/tasks` and `PATCH /api/tasks/:id` to accept and store `reminder_enabled`
-- [ ] Add email input field to registration flow in the frontend (optional)
-- [ ] Add profile settings UI to allow setting email after registration
-- [ ] Add "Set reminder" checkbox to task form on future dates (only shown if user has email set)
-- [ ] Wire reminder checkbox to `reminder_enabled` field in task create/edit API calls
-- [ ] Set up Resend account; add `RESEND_API_KEY` and `EMAIL_FROM` to env files and Vercel dashboard
-- [ ] Add `CRON_SECRET` to env files and Vercel dashboard
-- [ ] Implement `POST /cron/reminders` endpoint: verify bearer token, query today's reminder tasks, send emails via Resend
-- [ ] Add cron job to `vercel.json`: `{"path": "/cron/reminders", "schedule": "0 6 * * *"}`
+- [x] Add `email` column (NULLABLE TEXT) to `users` table
+- [x] Add `reminder_enabled` column (INTEGER NOT NULL DEFAULT 0) to `tasks` table
+- [x] Update `POST /auth/register` to accept and store optional `email` field
+- [x] Add `PATCH /auth/profile` endpoint to set/update user email (auth required)
+- [x] Update `POST /api/tasks` and `PATCH /api/tasks/:id` to accept and store `reminder_enabled`
+- [x] Add profile settings page (`/profile`) to allow setting email after registration; linked from dashboard header
+- [x] Add "Set reminder" checkbox to task form on future dates (only shown if user has email set); show hint linking to profile page if no email
+- [x] Wire reminder checkbox to `reminder_enabled` field in task create/edit API calls
+- [x] Add `RESEND_API_KEY` and `EMAIL_FROM` to `.env.example` and Vercel dashboard
+- [x] Add `CRON_SECRET` to `.env.example` and Vercel dashboard
+- [x] Implement `POST /cron/reminders` endpoint: verify bearer token, query today's reminder tasks in CET timezone, send emails via Resend REST API (native `fetch` — avoids `uuid` ESM conflict from Resend SDK)
+- [x] Add cron job to `vercel.json`: `{"path": "/api/cron/reminders", "schedule": "0 6 * * *"}`
 - [ ] Test reminder email locally by calling the cron endpoint directly
 
 ---

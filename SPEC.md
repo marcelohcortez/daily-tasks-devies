@@ -99,12 +99,14 @@ CRON_SECRET=
 | id               | TEXT    | PRIMARY KEY (UUID)                   |
 | user_id          | TEXT    | FOREIGN KEY → users.id, NOT NULL     |
 | description      | TEXT    | NOT NULL                             |
-| duration         | TEXT    | NULLABLE (e.g. "1h", "2h")           |
-| duration_min     | INTEGER | NULLABLE (total minutes, computed)   |
+| duration         | TEXT    | NULLABLE (e.g. "1h", "2h"; `''` on legacy rows) |
+| duration_min     | INTEGER | NULLABLE (total minutes; `0` on legacy rows)     |
 | task_date        | TEXT    | NOT NULL (ISO 8601 date YYYY-MM-DD)  |
 | reminder_enabled | INTEGER | NOT NULL DEFAULT 0 (0=off, 1=on)     |
 | created_at       | TEXT    | NOT NULL (ISO 8601)                  |
 | updated_at       | TEXT    | NOT NULL (ISO 8601)                  |
+
+> **Note:** The production database was created before duration became optional and has `NOT NULL` constraints on both columns. New rows store `''` / `0` when no duration is provided (satisfies the constraint). Fresh schema deployments define these columns as NULLABLE.
 
 ---
 
@@ -151,8 +153,8 @@ All task endpoints enforce ownership — users can only read/modify their own ta
 }
 ```
 
-> `duration` is optional. If provided, it must be a positive whole-number integer string (e.g. `"1"`, `"2"`). If omitted, `duration` and `duration_min` are stored as `NULL`.
-> `reminder_enabled` is optional (default `false`). Only meaningful for future dates; ignored for past/current dates.
+> `duration` is **optional**. If omitted or empty, `duration` is stored as `''` and `duration_min` as `0` (satisfies the production NOT NULL constraint). A non-empty value must be a positive whole-number string (e.g. `"1"`, `"2"`).
+> `reminder_enabled` is optional (default `false`). Only meaningful for future dates; ignored otherwise.
 
 ### Export
 
@@ -251,14 +253,14 @@ All task endpoints enforce ownership — users can only read/modify their own ta
 
 Duration is **optional**. When provided, it must be a positive whole number of hours via a numeric input field. Fractional hours are not supported.
 
-| Input (user types) | Stored as | Minutes  |
-|--------------------|-----------|----------|
-| *(empty)*          | `NULL`    | `NULL`   |
-| `1`                | `1h`      | 60       |
-| `2`                | `2h`      | 120      |
-| `3`                | `3h`      | 180      |
+| Input (user types) | Stored `duration` | Stored `duration_min` |
+|--------------------|-------------------|-----------------------|
+| *(empty)*          | `''`              | `0`                   |
+| `1`                | `1h`              | 60                    |
+| `2`                | `2h`              | 120                   |
+| `3`                | `3h`              | 180                   |
 
-The time summary sums only tasks that have a duration. Tasks without a duration contribute `0` to the total.
+The time summary sums only tasks where `duration_min > 0`. Tasks without a duration contribute `0` to the total and display no duration in the task row.
 
 ---
 
@@ -271,11 +273,15 @@ This project follows a **test-driven development approach**. Playwright E2E test
   - Unauthenticated redirect to login; authenticated redirect away from login
   - Viewing tasks for today, a past date, and a future date
   - Creating tasks (single and multiple via "Add another task")
+  - Creating a task **without** specifying duration — should save and not display a duration
   - Editing an existing task
   - Deleting a task (including typing `delete` in the confirmation input)
   - Calendar navigation (arrows + calendar picker)
   - Time summary updates after adding/removing tasks
+  - Time summary is unaffected by tasks with no duration
   - User isolation: a user cannot view or modify another user's tasks
+  - Profile page is reachable from the dashboard header
+  - Reminder checkbox appears on a future-date task when the user has an email set
 - Tests run on every feature addition or modification
 - **Playwright tests must never be modified to make a feature pass** — fix the implementation instead
 

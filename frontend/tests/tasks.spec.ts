@@ -140,4 +140,32 @@ test.describe('Tasks — create, view, edit, delete', () => {
   test('URL reflects current date on load', async ({ page }) => {
     await expect(page).toHaveURL(new RegExp(`date=${todayISO()}`))
   })
+
+  test('create a task without specifying duration', async ({ page }) => {
+    await page.getByTestId('task-description-input').first().fill('No-duration task')
+    // leave duration input empty
+    await page.getByRole('button', { name: /save/i }).click()
+
+    await expect(page.getByTestId('task-list')).toContainText('No-duration task')
+    // the duration column should not show any hours label for this task
+    const taskItems = page.getByTestId('task-list').locator('[data-testid="task-item"]')
+    await expect(taskItems.first()).not.toContainText('h')
+  })
+
+  test('time summary is not affected by tasks without duration', async ({ page }) => {
+    // Create one task with duration
+    await page.getByTestId('task-description-input').first().fill('Timed task')
+    await page.getByTestId('task-duration-input').first().fill('2')
+    await page.getByRole('button', { name: /save/i }).click()
+    await expect(page.getByTestId('time-summary')).toContainText('2h')
+
+    // Create a second task without duration
+    await page.getByRole('button', { name: /add another task/i }).click()
+    await page.getByTestId('task-description-input').last().fill('Quick note')
+    // leave duration empty
+    await page.getByRole('button', { name: /save/i }).click()
+
+    // Summary should still show only 2h (the no-duration task adds nothing)
+    await expect(page.getByTestId('time-summary')).toContainText('2h')
+  })
 })
