@@ -1,5 +1,5 @@
 import { Response } from 'express'
-import { v4 as uuidv4 } from 'uuid'
+import { randomUUID } from 'crypto'
 import { db } from '../models/db'
 import { parseDuration } from '../utils/duration'
 import { sanitizeString } from '../middleware/validation'
@@ -33,7 +33,7 @@ export async function createTask(req: AuthRequest, res: Response): Promise<void>
 
   const { stored, minutes } = parseDuration(rawDuration)
 
-  const id = uuidv4()
+  const id = randomUUID()
   const now = new Date().toISOString()
 
   await db.execute({

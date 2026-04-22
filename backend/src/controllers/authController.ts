@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { v4 as uuidv4 } from 'uuid'
+import { randomUUID } from 'crypto'
 import { db } from '../models/db'
 import { hashPassword, verifyPassword } from '../utils/password'
 import { signToken } from '../utils/jwt'
@@ -68,7 +68,7 @@ export async function register(req: Request, res: Response): Promise<void> {
     return
   }
 
-  const id = uuidv4()
+  const id = randomUUID()
   const hashed = await hashPassword(password)
   const now = new Date().toISOString()
 
