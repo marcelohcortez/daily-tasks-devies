@@ -28,7 +28,7 @@ export async function getTasks(req: AuthRequest, res: Response): Promise<void> {
 export async function createTask(req: AuthRequest, res: Response): Promise<void> {
   const userId = req.user!.userId
   const description = sanitizeString(req.body?.description, 'description')
-  const rawDuration = sanitizeString(req.body?.duration, 'duration')
+  const rawDuration = req.body?.duration != null ? String(req.body.duration) : ''
   const taskDate = validateDate(req.body?.task_date)
   const reminderEnabled = req.body?.reminder_enabled === true ? 1 : 0
 
@@ -62,7 +62,7 @@ export async function updateTask(req: AuthRequest, res: Response): Promise<void>
   }
 
   const description = sanitizeString(req.body?.description, 'description')
-  const rawDuration = sanitizeString(req.body?.duration, 'duration')
+  const rawDuration = req.body?.duration != null ? String(req.body.duration) : ''
   const taskDate = validateDate(req.body?.task_date)
   const reminderEnabled = req.body?.reminder_enabled === true ? 1 : 0
 

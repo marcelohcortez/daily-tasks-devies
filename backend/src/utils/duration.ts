@@ -2,8 +2,10 @@
  * Parses a whole-number hours value into a normalized form and total minutes.
  * Accepted input: a positive integer string, e.g. "1", "2", "3".
  */
-export function parseDuration(raw: string): { stored: string; minutes: number } {
+export function parseDuration(raw: string): { stored: string | null; minutes: number | null } {
   const trimmed = raw.trim()
+  if (trimmed === '') return { stored: null, minutes: null }
+
   const hours = Number(trimmed)
 
   if (!Number.isInteger(hours) || hours <= 0 || String(hours) !== trimmed) {

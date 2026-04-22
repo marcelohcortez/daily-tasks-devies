@@ -80,7 +80,7 @@ export default function TaskForm({ taskDate, onSaved }: Props) {
               type="number"
               min="1"
               step="1"
-              placeholder="hours"
+              placeholder="hours (optional)"
               value={row.duration}
               onChange={(e) => updateRow(i, 'duration', e.target.value)}
               disabled={saving}
